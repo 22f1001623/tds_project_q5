@@ -38,7 +38,8 @@ LOG_URL = f"{BASE_URL}/run.jsonl"
 TG_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 MAX_AGENT_STEPS = 10
-PY_TIMEOUT = 120  # seconds for one run_python call
+PY_TIMEOUT = 60  # seconds for one run_python call
+ANSWER_BUDGET = 210  # wall-clock seconds before we force a final answer
 
 _log_lock = threading.Lock()
 _histories: dict[int, list[dict]] = {}  # chat_id -> chat-completion messages
@@ -177,9 +178,18 @@ def solve(chat_id: int, question: str) -> str:
     log_event(event="question", chat_id=chat_id, text=question)
 
     final_text = None
+    deadline = time.time() + ANSWER_BUDGET
     for step in range(MAX_AGENT_STEPS):
+        out_of_time = time.time() > deadline
+        if out_of_time:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Time is up. Reply NOW with only your best final JSON object.",
+                }
+            )
         try:
-            msg = chat_completion(messages, use_tools=True)
+            msg = chat_completion(messages, use_tools=not out_of_time)
         except Exception as e:
             log_event(event="llm_error", chat_id=chat_id, error=str(e))
             time.sleep(2)
