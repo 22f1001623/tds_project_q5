@@ -26,7 +26,9 @@ AIPIPE_TOKEN = os.environ.get("AIPIPE_TOKEN", "")
 MODEL = os.environ.get("MODEL", "gpt-4o-mini")
 MODEL_BASE_URL = os.environ.get("MODEL_BASE_URL", "https://aipipe.org")
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000").rstrip("/")
-LOG_PATH = os.environ.get("LOG_PATH", "/tmp/run.jsonl")
+# Change this line inside your config section:
+LOG_PATH = "run.jsonl"
+# LOG_PATH = os.environ.get("LOG_PATH", "/tmp/run.jsonl")
 LOG_URL = f"{BASE_URL}/run.jsonl"
 TG_API = f"https://telegram.org{BOT_TOKEN}"
 MAX_AGENT_STEPS = 10
@@ -239,14 +241,23 @@ def poll_loop():
     offset = 0
     pool = ThreadPoolExecutor(max_workers=6)
     while True:
+        # Replace your loop's internal try/except block with this:
         try:
-            resp = requests.get(f"{TG_API}/getUpdates", params={"offset": offset, "timeout": 50}, timeout=65).json()
+            r = requests.get(f"{TG_API}/getUpdates", params={"offset": offset, "timeout": 50}, timeout=65)
+            # This reveals if Telegram is blocking your token!
+            if r.status_code != 200:
+                print(f"TELEGRAM API BLOCKED (Status {r.status_code}): {r.text}")
+                time.sleep(5)
+                continue
+                
+            resp = r.json()
             for upd in resp.get("result", []):
                 offset = upd["update_id"] + 1
                 pool.submit(handle_update, upd)
         except Exception as e:
-            log_event(event="poll_error", error=str(e))
+            print(f"POLLING SCRIPT ERROR: {str(e)}")
             time.sleep(5)
+
 
 def keepwarm_loop():
     while True:
