@@ -31,7 +31,6 @@ LOG_PATH = "run.jsonl"
 # LOG_PATH = os.environ.get("LOG_PATH", "/tmp/run.jsonl")
 LOG_URL = f"{BASE_URL}/run.jsonl"
 # --- CHANGE THIS LINE IN YOUR CONFIG SECTION ---
-
 TG_API = f"https://telegram.org{BOT_TOKEN}"
 MAX_AGENT_STEPS = 10
 PY_TIMEOUT = 60 
