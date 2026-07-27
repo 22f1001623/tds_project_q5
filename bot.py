@@ -220,10 +220,22 @@ def solve(chat_id: int, question: str) -> str:
         break
 
     obj = extract_json(final_text) if final_text else None
+
     if obj is None:
-        obj = {"answer": (final_text or "unable to determine").strip()[:1000]}
+        # If it fails to parse JSON, try cleaning up any markdown backticks first
+        cleaned_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", final_text.strip(), flags=re.M) if final_text else ""
+        try:
+            obj = json.loads(cleaned_text)
+        except Exception:
+            # If it still fails, return the actual raw text from the model so you can read it!
+            obj = {"answer": (final_text or "No response from model").strip()}
+
+    if not isinstance(obj, dict):
+        obj = {"answer": obj}
+
     if "answer" not in obj:
         obj = {"answer": obj}
+
     obj["log_url"] = LOG_URL
     reply = json.dumps(obj, ensure_ascii=False)
 
@@ -301,7 +313,7 @@ async def lifespan(app: FastAPI):
     # You can leave this blank (runs on shutdown)
 
 # Pass the lifespan context manager into your FastAPI app
-app = FastAPI(lifespan=lifespan)
+
 
 
 @app.get("/health")
@@ -319,3 +331,4 @@ def run_log():
 @app.get("/")
 def root():
     return {"service": "data-analyst-telegram-bot", "log_url": LOG_URL}
+app = FastAPI(lifespan=lifespan)
