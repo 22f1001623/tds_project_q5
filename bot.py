@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 AIPIPE_TOKEN = os.environ.get("AIPIPE_TOKEN", "")
 MODEL = os.environ.get("MODEL", "gpt-4o-mini")
-MODEL_BASE_URL = os.environ.get("MODEL_BASE_URL", "https://aipipe.org")
+MODEL_BASE_URL = os.environ.get("MODEL_BASE_URL", "https://aipipe.org/openai/v1")
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000").rstrip("/")
 # Change this line inside your config section:
 LOG_PATH = "run.jsonl"
