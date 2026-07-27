@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+
+
 """Data-analyst Telegram bot — TDS Project 1.
 
 An LLM agent that answers data-analysis questions sent over Telegram.
@@ -285,12 +288,20 @@ def keepwarm_loop():
 app = FastAPI()
 
 
-@app.on_event("startup")
-def _start():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # This runs on startup
     if not os.path.exists(LOG_PATH):
         log_event(event="log_created")
     threading.Thread(target=poll_loop, daemon=True).start()
     threading.Thread(target=keepwarm_loop, daemon=True).start()
+    
+    yield  # The app runs while paused here
+    
+    # You can leave this blank (runs on shutdown)
+
+# Pass the lifespan context manager into your FastAPI app
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/health")
