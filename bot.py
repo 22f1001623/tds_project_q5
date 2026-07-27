@@ -276,7 +276,8 @@ def health():
 def run_log():
     if os.path.exists(LOG_PATH):
         return FileResponse(LOG_PATH, media_type="application/jsonl; charset=utf-8", filename="run.jsonl")
-return PlainTextResponse("", media_type="application/jsonl")
+    return PlainTextResponse("", media_type="application/jsonl")
+
 @app.get("/")
 def root():
     return {"service": "data-analyst-telegram-bot", "log_url": LOG_URL}
